@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) { // code to render window
   scene.objectsInScene[0] = sphere;
 
   for (int x = -CANVAS_WIDTH / 2; x < CANVAS_WIDTH / 2; x++) {
-    for (int y = -CANVAS_WIDTH / 2; y < CANVAS_WIDTH / 2; y++) {
+    for (int y = -CANVAS_HEIGHT / 2; y < CANVAS_HEIGHT / 2; y++) {
       Point point;
       point.x = x;
       point.y = y;
@@ -120,12 +120,12 @@ void convertPointFromViewportToScreenCoordSystem(Point *viewPointCoord) {
 }
 void convertCanvasToViewport(Point *canvasPoint) {
   canvasPoint->x *= VIEWPORT_WIDTH / CANVAS_WIDTH;
-  canvasPoint->y *= VIEWPORT_HEIGHT / CANVAS_WIDTH;
+  canvasPoint->y *= VIEWPORT_HEIGHT / CANVAS_HEIGHT;
   canvasPoint->z = 1;
 }
 void convertViewportToCanvas(Point *canvasPoint) {
   canvasPoint->x /= VIEWPORT_WIDTH / CANVAS_WIDTH;
-  canvasPoint->y /= VIEWPORT_HEIGHT / CANVAS_WIDTH;
+  canvasPoint->y /= VIEWPORT_HEIGHT / CANVAS_HEIGHT;
   canvasPoint->z = 1;
 }
 Point traceRay(Point *camera, Point *viewport, Scene *scene, int minRange,
@@ -192,5 +192,3 @@ void intersectRay(Point *camera, Point *viewport, Sphere *sphere, int *range_1,
   *range_1 = (-b + sqrt(discriminant)) / (2 * a);
   *range_1 = (-b + sqrt(discriminant)) / (2 * a);
 }
-
-void render() {}

@@ -7,34 +7,32 @@
 #endif
 #include <math.h>
 #include <stdio.h>
-#define CANVAS_WIDTH 800
-#define CANVAS_HEIGHT 600
-#define VIEWPORT_WIDTH 800
-#define VIEWPORT_HEIGHT 600
+#define CANVAS_WIDTH 400
+#define CANVAS_HEIGHT 400
+#define VIEWPORT_WIDTH 400
+#define VIEWPORT_HEIGHT 400
 #define DELAY 3000
-struct Point {
-  int x, y, z;
-};
-typedef struct Point Point;
 
-struct Sphere {
+typedef struct {
+  float x, y, z;
+} Point;
+
+typedef struct {
   Point center;
   double radius;
   Point color;
-};
-typedef struct Sphere Sphere;
+} Sphere;
 
-struct Scene {
+typedef struct {
   int amountOfObjectsInScene;
   Sphere *objectsInScene;
-};
-typedef struct Scene Scene;
+} Scene;
 
 void convertViewportToCanvas(Point *);
 void convertPointFromViewportToScreenCoordSystem(Point *);
 void convertCanvasToViewport(Point *);
-Point traceRay(Point *, Point *, Scene *, int, int);
-void intersectRay(Point *, Point *, Sphere *, int *, int *);
+Point traceRay(Point *, Point *, Scene *, float, float);
+void intersectRay(Point *, Point *, Sphere *, float *, float *);
 
 int main(int argc, char *argv[]) { // code to render window
   SDL_Window *window = NULL;
@@ -66,39 +64,18 @@ int main(int argc, char *argv[]) { // code to render window
 
   // sets the render colour to white to draw
 
-  Point camera;
-  camera.x = 0;
-  camera.y = 0;
-  camera.z = 0;
-  Scene scene;
-
-  scene.amountOfObjectsInScene = 1;
-  scene.objectsInScene =
-      (Sphere *)malloc(scene.amountOfObjectsInScene * sizeof(Sphere));
-  Sphere sphere;
-  Point sphereCenter;
-  sphereCenter.x = 0;
-  sphereCenter.y = -1;
-  sphereCenter.z = 3;
-
-  sphere.center = sphereCenter;
-  sphere.radius = 1;
-  Point sphereColor;
-  sphereColor.x = 255;
-  sphereColor.y = 0;
-  sphereColor.z = 0;
-
-  sphere.color = sphereColor;
-  scene.objectsInScene[0] = sphere;
+  Point camera = {.x = 0, .y = 0, .z = 0};
+  Sphere sphere = {.center = {.x = 0, .y = -1, .z = 3},
+                   .radius = 3,
+                   .color = {.x = 255, .y = 0, .z = 0}};
+  Scene scene = {.amountOfObjectsInScene = 1, .objectsInScene = &sphere};
 
   for (int x = -CANVAS_WIDTH / 2; x < CANVAS_WIDTH / 2; x++) {
     for (int y = -CANVAS_HEIGHT / 2; y < CANVAS_HEIGHT / 2; y++) {
-      Point point;
-      point.x = x;
-      point.y = y;
+      Point point = {.x = x, .y = y};
       convertCanvasToViewport(&point);
       Point color = traceRay(&camera, &point, &scene, 1, INFINITY);
-      // convertViewportToCanvas(&point);
+      convertViewportToCanvas(&point);
       convertPointFromViewportToScreenCoordSystem(&point);
       SDL_SetRenderDrawColor(renderer, color.x, color.y, color.z, 255);
       SDL_RenderDrawPoint(renderer, point.x, point.y);
@@ -106,7 +83,6 @@ int main(int argc, char *argv[]) { // code to render window
   }
 
   SDL_RenderPresent(renderer);
-
   SDL_Delay(DELAY);
   SDL_DestroyWindow(window);
   SDL_Quit();
@@ -115,69 +91,70 @@ int main(int argc, char *argv[]) { // code to render window
 }
 
 void convertPointFromViewportToScreenCoordSystem(Point *viewPointCoord) {
-  viewPointCoord->x += CANVAS_WIDTH / 2;
-  viewPointCoord->y += CANVAS_HEIGHT / 2;
+  viewPointCoord->x += CANVAS_WIDTH / 2.0;
+  viewPointCoord->y = CANVAS_HEIGHT / 2.0 - viewPointCoord->y;
 }
 void convertCanvasToViewport(Point *canvasPoint) {
-  canvasPoint->x *= VIEWPORT_WIDTH / CANVAS_WIDTH;
-  canvasPoint->y *= VIEWPORT_HEIGHT / CANVAS_HEIGHT;
+  canvasPoint->x *= VIEWPORT_WIDTH / (float)CANVAS_WIDTH;
+  canvasPoint->y *= VIEWPORT_HEIGHT / (float)CANVAS_HEIGHT;
   canvasPoint->z = 1;
 }
 void convertViewportToCanvas(Point *canvasPoint) {
-  canvasPoint->x /= VIEWPORT_WIDTH / CANVAS_WIDTH;
-  canvasPoint->y /= VIEWPORT_HEIGHT / CANVAS_HEIGHT;
+  canvasPoint->x /= VIEWPORT_WIDTH / (float)CANVAS_WIDTH;
+  canvasPoint->y /= VIEWPORT_HEIGHT / (float)CANVAS_HEIGHT;
   canvasPoint->z = 1;
 }
-Point traceRay(Point *camera, Point *viewport, Scene *scene, int minRange,
-               int maxRange) {
+Point traceRay(Point *camera, Point *viewport, Scene *scene, float minRange,
+               float maxRange) {
   int closestRange = INFINITY;
   Sphere *closestSphere = NULL;
 
   for (int i = 0; i < scene->amountOfObjectsInScene; i++) {
-    int range_1;
-    int range_2;
+    float range_1, range_2;
     intersectRay(camera, viewport, &scene->objectsInScene[i], &range_1,
                  &range_2);
 
-    if ((range_1 > minRange || range_1 < maxRange) && range_1 < closestRange) {
+    if ((range_1 >= minRange || range_1 <= maxRange) &&
+        range_1 < closestRange) {
       closestRange = range_1;
       closestSphere = &scene->objectsInScene[i];
     }
-    if ((range_2 > minRange || range_2 < maxRange) && range_2 < closestRange) {
+    if ((range_2 >= minRange || range_2 <= maxRange) &&
+        range_2 < closestRange) {
       closestRange = range_2;
       closestSphere = &scene->objectsInScene[i];
     }
   }
-  Point color;
-  if (closestSphere == NULL) {
+  // background color
+  Point color = {.x = 0, .y = 0, .z = 0};
 
-    color.x = 255;
-    color.y = 255;
-    color.z = 255;
+  if (closestSphere == NULL) {
     return color;
   }
+
   color = closestSphere->color;
   return color;
 };
 
 Point minusVectors(Point *vector_1, Point *vector_2) {
-  Point vectorResult;
-  vectorResult.x = vector_1->x - vector_2->x;
-  vectorResult.y = vector_1->y - vector_2->y;
-  vectorResult.z = vector_1->z - vector_2->z;
+  Point vectorResult = {.x = vector_1->x - vector_2->x,
+                        .y = vector_1->y - vector_2->y,
+                        .z = vector_1->z - vector_2->z};
   return vectorResult;
 }
-int dotProduct(Point *vector_1, Point *vector_2) {
-  return vector_1->x * vector_2->x + vector_1->y * vector_2->y +
-         vector_1->z * vector_2->z;
+float dotProduct(Point *vector_1, Point *vector_2) {
+  float result = vector_1->x * vector_2->x + vector_1->y * vector_2->y +
+                 vector_1->z * vector_2->z;
+
+  return result;
 }
 
-void intersectRay(Point *camera, Point *viewport, Sphere *sphere, int *range_1,
-                  int *range_2) {
-  int r = sphere->radius;
+void intersectRay(Point *camera, Point *viewport, Sphere *sphere,
+                  float *range_1, float *range_2) {
+  float r = sphere->radius;
   Point CO = minusVectors(camera, &sphere->center);
 
-  int a, b, c, discriminant;
+  float a, b, c, discriminant;
   a = dotProduct(viewport, viewport);
   b = 2 * dotProduct(&CO, viewport);
   c = dotProduct(&CO, &CO) - r * r;
@@ -189,6 +166,6 @@ void intersectRay(Point *camera, Point *viewport, Sphere *sphere, int *range_1,
     *range_2 = INFINITY;
     return;
   }
-  *range_1 = (-b + sqrt(discriminant)) / (2 * a);
-  *range_1 = (-b + sqrt(discriminant)) / (2 * a);
+  *range_1 = (-b - sqrt(discriminant)) / (2 * a);
+  *range_2 = (-b + sqrt(discriminant)) / (2 * a);
 }

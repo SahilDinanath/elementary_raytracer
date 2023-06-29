@@ -14,7 +14,7 @@
 #define DELAY 3000
 
 typedef struct {
-  double x, y, z;
+  long double x, y, z;
 } Point;
 
 typedef struct {
@@ -46,7 +46,8 @@ int main(int argc, char *argv[]) { // code to render window
   window =
       SDL_CreateWindow("RayTracer", SDL_WINDOWPOS_UNDEFINED,
                        SDL_WINDOWPOS_UNDEFINED, CANVAS_WIDTH, CANVAS_HEIGHT, 0);
-  renderer = SDL_CreateRenderer(window, 0, 0);
+  renderer = SDL_CreateRenderer(
+      window, 0, SDL_RENDERER_SOFTWARE | SDL_RENDERER_PRESENTVSYNC);
 
   if (window == NULL) {
     fprintf(stderr, "SDL window failed to initialise: %s\n", SDL_GetError());
@@ -139,7 +140,7 @@ Point traceRay(Point *camera, Point *viewport, Scene *scene, double minRange,
     }
   }
   // background color
-  Point color = {.x = 0, .y = 0, .z = 0};
+  Point color = {.x = 255, .y = 255, .z = 255};
 
   if (closestSphere == NULL) {
     return color;

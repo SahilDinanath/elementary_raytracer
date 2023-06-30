@@ -18,6 +18,13 @@ typedef struct {
 } Point;
 
 typedef struct {
+  // type ambient = 0; point = 1; directional = 2;
+  int type;
+  float intensity;
+  Point position;
+} Light;
+
+typedef struct {
   Point center;
   double radius;
   Point color;
@@ -26,6 +33,8 @@ typedef struct {
 typedef struct {
   int amountOfObjectsInScene;
   Sphere *objectsInScene;
+  int amountOfLightsInScene;
+  Light *lightsInScene;
 } Scene;
 
 void convertViewportToCanvas(Point *);
@@ -33,6 +42,11 @@ void convertPointFromViewportToScreenCoordSystem(Point *);
 void convertCanvasToViewport(Point *);
 Point traceRay(Point *, Point *, Scene *, double, double);
 void intersectRay(Point *, Point *, Sphere *, double *, double *);
+double computeLighting(Point *, Point *, Scene *);
+double lengthOfVector(Point *);
+Point minusVectors(Point *, Point *);
+Point addVectors(Point *, Point *);
+Point multiplyVectorByConstant(Point *, double);
 
 int main(int argc, char *argv[]) { // code to render window
   SDL_Window *window = NULL;
@@ -65,6 +79,7 @@ int main(int argc, char *argv[]) { // code to render window
 
   // sets the render colour to white to draw
 
+  // initialises scenes
   Point camera = {.x = 0, .y = 0, .z = 0};
   Sphere sphere_1 = {.center = {.x = 0, .y = -1, .z = 3},
                      .radius = 1,
@@ -76,13 +91,31 @@ int main(int argc, char *argv[]) { // code to render window
   Sphere sphere_3 = {.center = {.x = -2, .y = 0, .z = 4},
                      .radius = 1,
                      .color = {.x = 0, .y = 255, .z = 0}};
-
-  Scene scene = {.amountOfObjectsInScene = 3,
-                 .objectsInScene = (Sphere *)malloc(3 * sizeof(Sphere))};
+  Sphere sphere_4 = {.center = {.x = 0, .y = -5001, .z = 0},
+                     .radius = 5000,
+                     .color = {.x = 255, .y = 255, .z = 0}};
+  Scene scene = {.amountOfObjectsInScene = 4,
+                 .objectsInScene = (Sphere *)malloc(4 * sizeof(Sphere)),
+                 .amountOfLightsInScene = 4,
+                 .lightsInScene = (Light *)malloc(4 * sizeof(Light))};
 
   scene.objectsInScene[0] = sphere_1;
   scene.objectsInScene[1] = sphere_2;
   scene.objectsInScene[2] = sphere_3;
+  scene.objectsInScene[3] = sphere_4;
+
+  // initialises lighting in scene
+  Light light_1 = {.type = 0, .intensity = 0.2};
+
+  Light light_2 = {
+      .type = 1, .intensity = 0.6, .position = {.x = 2, .y = 1, .z = 0}};
+
+  Light light_3 = {
+      .type = 2, .intensity = 0.2, .position = {.x = 1, .y = 4, .z = 4}};
+
+  scene.lightsInScene[0] = light_1;
+  scene.lightsInScene[1] = light_2;
+  scene.lightsInScene[2] = light_3;
 
   for (int x = -CANVAS_WIDTH / 2; x < CANVAS_WIDTH / 2; x++) {
     for (int y = -CANVAS_HEIGHT / 2; y < CANVAS_HEIGHT / 2; y++) {
@@ -104,6 +137,7 @@ int main(int argc, char *argv[]) { // code to render window
   return 0;
 }
 
+// rendering scene functions
 void convertPointFromViewportToScreenCoordSystem(Point *viewPointCoord) {
   viewPointCoord->x += CANVAS_WIDTH / 2.0;
   viewPointCoord->y = CANVAS_HEIGHT / 2.0 - viewPointCoord->y - 1;
@@ -147,7 +181,13 @@ Point traceRay(Point *camera, Point *viewport, Scene *scene, double minRange,
   }
 
   color = closestSphere->color;
-  return color;
+  Point temp = multiplyVectorByConstant(viewport, closestRange);
+  Point point = addVectors(camera, &temp);
+  Point normal = minusVectors(&point, &closestSphere->center);
+
+  normal = multiplyVectorByConstant(&normal, 1 / lengthOfVector(&normal));
+  return multiplyVectorByConstant(&color,
+                                  computeLighting(&point, &normal, scene));
 };
 
 Point minusVectors(Point *vector_1, Point *vector_2) {
@@ -182,4 +222,47 @@ void intersectRay(Point *camera, Point *viewport, Sphere *sphere,
   }
   *range_1 = (-b + sqrt(discriminant)) / (2 * a);
   *range_2 = (-b - sqrt(discriminant)) / (2 * a);
+}
+
+// lighting functions
+double lengthOfVector(Point *vector) {
+  return sqrt(dotProduct(vector, vector));
+}
+Point addVectors(Point *vector_1, Point *vector_2) {
+  Point temp = {.x = vector_1->x + vector_2->x,
+                .y = vector_1->y + vector_2->y,
+                .z = vector_1->z + vector_2->z};
+
+  return temp;
+};
+
+Point multiplyVectorByConstant(Point *vector_1, double constant) {
+  Point temp = {.x = vector_1->x * constant,
+                .y = vector_1->y * constant,
+                .z = vector_1->z * constant};
+  return temp;
+};
+double computeLighting(Point *point, Point *normal, Scene *scene) {
+  double intensity = 0;
+  for (int i = 0; i < scene->amountOfLightsInScene; i++) {
+    Point length;
+
+    switch (scene->lightsInScene[i].type) {
+    case 0:
+      intensity += scene->lightsInScene[i].intensity;
+      break;
+    case 1:
+      length = minusVectors(&scene->lightsInScene[i].position, point);
+      break;
+    case 2:
+      length = scene->lightsInScene[i].position;
+      break;
+    }
+    double normalDot = dotProduct(normal, &length);
+    if (normalDot > 0) {
+      intensity += scene->lightsInScene[i].intensity * normalDot /
+                   (lengthOfVector(normal) * lengthOfVector(&length));
+    }
+  }
+  return intensity;
 }

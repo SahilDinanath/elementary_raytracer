@@ -1,6 +1,5 @@
 #!/bin/bash
 
-make clean
-make all
-
+make
+make main
 ./main

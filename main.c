@@ -5,6 +5,8 @@
 #else
 #include <SDL2/SDL.h>
 #endif
+#include "scene_structs.h"
+#include "vector_math.h"
 #include <math.h>
 #include <stdio.h>
 #define CANVAS_WIDTH 600
@@ -13,40 +15,12 @@
 #define VIEWPORT_HEIGHT 1
 #define DELAY 3000
 
-typedef struct {
-  long double x, y, z;
-} Point;
-
-typedef struct {
-  // type ambient = 0; point = 1; directional = 2;
-  int type;
-  float intensity;
-  Point position;
-} Light;
-
-typedef struct {
-  Point center;
-  double radius;
-  Point color;
-} Sphere;
-
-typedef struct {
-  int amountOfObjectsInScene;
-  Sphere *objectsInScene;
-  int amountOfLightsInScene;
-  Light *lightsInScene;
-} Scene;
-
 void convertViewportToCanvas(Point *);
 void convertPointFromViewportToScreenCoordSystem(Point *);
 void convertCanvasToViewport(Point *);
 Point traceRay(Point *, Point *, Scene *, double, double);
 void intersectRay(Point *, Point *, Sphere *, double *, double *);
 double computeLighting(Point *, Point *, Scene *);
-double lengthOfVector(Point *);
-Point minusVectors(Point *, Point *);
-Point addVectors(Point *, Point *);
-Point multiplyVectorByConstant(Point *, double);
 
 int main(int argc, char *argv[]) { // code to render window
   SDL_Window *window = NULL;
@@ -190,19 +164,6 @@ Point traceRay(Point *camera, Point *viewport, Scene *scene, double minRange,
                                   computeLighting(&point, &normal, scene));
 };
 
-Point minusVectors(Point *vector_1, Point *vector_2) {
-  Point vectorResult = {.x = vector_1->x - vector_2->x,
-                        .y = vector_1->y - vector_2->y,
-                        .z = vector_1->z - vector_2->z};
-  return vectorResult;
-}
-double dotProduct(Point *vector_1, Point *vector_2) {
-  double result = vector_1->x * vector_2->x + vector_1->y * vector_2->y +
-                  vector_1->z * vector_2->z;
-
-  return result;
-}
-
 void intersectRay(Point *camera, Point *viewport, Sphere *sphere,
                   double *range_1, double *range_2) {
   double r = sphere->radius;
@@ -225,23 +186,7 @@ void intersectRay(Point *camera, Point *viewport, Sphere *sphere,
 }
 
 // lighting functions
-double lengthOfVector(Point *vector) {
-  return sqrt(dotProduct(vector, vector));
-}
-Point addVectors(Point *vector_1, Point *vector_2) {
-  Point temp = {.x = vector_1->x + vector_2->x,
-                .y = vector_1->y + vector_2->y,
-                .z = vector_1->z + vector_2->z};
 
-  return temp;
-};
-
-Point multiplyVectorByConstant(Point *vector_1, double constant) {
-  Point temp = {.x = vector_1->x * constant,
-                .y = vector_1->y * constant,
-                .z = vector_1->z * constant};
-  return temp;
-};
 double computeLighting(Point *point, Point *normal, Scene *scene) {
   double intensity = 0;
   for (int i = 0; i < scene->amountOfLightsInScene; i++) {

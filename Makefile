@@ -1,5 +1,5 @@
 IDIR=./include
-ODIR=./obj
+ODIR=./objects
 
 CC=gcc
 CFLAGS=-g -Wall -I$(IDIR)

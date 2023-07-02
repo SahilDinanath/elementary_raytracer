@@ -1,14 +1,21 @@
-CC=gcc
-CFLAGS=-g -Wall -I.
-LDLIBS=-lSDL2 -lm
-DEPS= vector_math.h scene_structs.h
-OBJ= main.o vector_math.o 
+IDIR=./include
+ODIR=./obj
 
-%.o: %.c $(DEPS)
+CC=gcc
+CFLAGS=-g -Wall -I$(IDIR)
+LDLIBS=-lSDL2 -lm
+
+_DEPS= vector_math.h scene_structs.h
+DEPS= $(patsubst %,$(IDIR)/%,$(_DEPS))
+
+_OBJ= main.o vector_math.o 
+OBJ= $(patsubst %,$(ODIR)/%,$(_OBJ))
+
+$(ODIR)/%.o: %.c $(DEPS)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 main: $(OBJ)
 	$(CC) $^ -o $@ $(CFLAGS) $(LDLIBS) 
 
 clean:
-	rm -f main
+	rm -f main $(ODIR)/*.o 

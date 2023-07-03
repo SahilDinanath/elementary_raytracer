@@ -1,5 +1,5 @@
-#include "include/scene_structs.h"
-#include "include/vector_math.h"
+#include "../include/scene_structs.h"
+#include "../include/vector_math.h"
 #include <math.h>
 #include <stdlib.h>
 

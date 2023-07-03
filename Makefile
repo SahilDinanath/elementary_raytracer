@@ -1,5 +1,6 @@
 IDIR=./include
 ODIR=./objects
+SDIR=./src
 
 CC=gcc
 CFLAGS=-g -Wall -I$(IDIR)
@@ -11,7 +12,7 @@ DEPS= $(patsubst %,$(IDIR)/%,$(_DEPS))
 _OBJ= main.o vector_math.o raytracer.o
 OBJ= $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-$(ODIR)/%.o: %.c $(DEPS)
+$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 main: $(OBJ)

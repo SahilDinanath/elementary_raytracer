@@ -61,12 +61,15 @@ double computeLighting(Point *point, Point *normal, Scene *scene) {
     Point length;
 
     switch (scene->lightsInScene[i].type) {
+      // ambient lighting
     case 0:
       intensity += scene->lightsInScene[i].intensity;
       break;
+      // point lighting
     case 1:
       length = minusVectors(&scene->lightsInScene[i].position, point);
       break;
+      // directional lighting
     case 2:
       length = scene->lightsInScene[i].position;
       break;

@@ -3,7 +3,7 @@ An elementary raytracer built to understand the fundementals of graphics renderi
 
 example of simply raytracing the shape of an object:
 
-![image](https://github.com/SahilDinanath/elementary_raytracer/assets/46680594/725a8250-af0d-4b5e-979f-1e377d97044a)
+![image](https://github.com/SahilDinanath/elementary_raytracer/assets/46680594/724a2ecd-dae2-482e-a225-67ff4df1adc5)
 
 after calculating shadows:
 

@@ -32,6 +32,18 @@ Point convertViewportToCanvas(Point *canvasPoint, double viewPortWidth,
   return canvasCoord;
 }
 
+Point clampColor(Point *color) {
+  Point clampedColor = *color;
+  if (clampedColor.x > 255) {
+    clampedColor.x = 255;
+  } else if (clampedColor.y > 255) {
+    clampedColor.y = 255;
+  } else if (clampedColor.z > 255) {
+    clampedColor.z = 255;
+  }
+  return clampedColor;
+}
+
 void intersectRay(Point *camera, Point *viewport, Sphere *sphere,
                   double *range_1, double *range_2) {
   double r = sphere->radius;
@@ -55,7 +67,8 @@ void intersectRay(Point *camera, Point *viewport, Sphere *sphere,
 
 // lighting functions
 
-double computeLighting(Point *point, Point *normal, Scene *scene) {
+double computeLighting(Point *point, Point *normal, Scene *scene,
+                       Point *pointToCamera, double specular) {
   double intensity = 0;
   for (int i = 0; i < scene->amountOfLightsInScene; i++) {
     Point length;
@@ -74,10 +87,24 @@ double computeLighting(Point *point, Point *normal, Scene *scene) {
       length = scene->lightsInScene[i].position;
       break;
     }
+    // diffuse
     double normalDot = dotProduct(normal, &length);
     if (normalDot > 0) {
       intensity += scene->lightsInScene[i].intensity * normalDot /
                    (lengthOfVector(normal) * lengthOfVector(&length));
+    }
+    // specular
+    if (scene->objectsInScene[i].specular != -1) {
+      Point R = multiplyVectorByConstant(normal, 2);
+      R = multiplyVectorByConstant(&R, normalDot);
+      R = minusVectors(&R, &length);
+      double rDot = dotProduct(&R, pointToCamera);
+      if (rDot > 0) {
+        intensity += scene->lightsInScene[i].intensity *
+                     pow(rDot / (double)(lengthOfVector(&R) *
+                                         lengthOfVector(pointToCamera)),
+                         specular);
+      }
     }
   }
   return intensity;
@@ -117,6 +144,11 @@ Point traceRay(Point *camera, Point *viewport, Scene *scene, double minRange,
   Point normal = minusVectors(&point, &closestSphere->center);
 
   normal = multiplyVectorByConstant(&normal, 1 / lengthOfVector(&normal));
-  return multiplyVectorByConstant(&color,
-                                  computeLighting(&point, &normal, scene));
-};
+  Point negativeViewPort = multiplyVectorByConstant(viewport, -1);
+  color = multiplyVectorByConstant(
+      &color, computeLighting(&point, &normal, scene, &negativeViewPort,
+                              closestSphere->specular));
+
+  color = clampColor(&color);
+  return color;
+}

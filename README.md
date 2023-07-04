@@ -5,6 +5,10 @@ example of simply raytracing the shape of an object:
 
 ![image](https://github.com/SahilDinanath/elementary_raytracer/assets/46680594/724a2ecd-dae2-482e-a225-67ff4df1adc5)
 
-after calculating shadows:
+after calculating diffuse reflections:
 
 ![image](https://github.com/SahilDinanath/elementary_raytracer/assets/46680594/6fff1504-2ccd-4533-9895-3a934d5ffdee)
+
+after calculating specular reflections:
+
+![image](https://github.com/SahilDinanath/elementary_raytracer/assets/46680594/6148bcfe-2f2e-4d2e-83fa-82c2e6d8a283)

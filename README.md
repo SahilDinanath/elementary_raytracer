@@ -12,3 +12,8 @@ after calculating diffuse reflections:
 after calculating specular reflections:
 
 ![image](https://github.com/SahilDinanath/elementary_raytracer/assets/46680594/6148bcfe-2f2e-4d2e-83fa-82c2e6d8a283)
+
+after calculating shadows:
+
+![image](https://github.com/SahilDinanath/elementary_raytracer/assets/46680594/64d71bcc-abd5-4779-b63a-bc509629a7c3)
+

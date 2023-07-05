@@ -1,6 +1,7 @@
 #include "../include/scene_structs.h"
 #include "../include/vector_math.h"
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 // rendering scene functions
@@ -66,12 +67,32 @@ void intersectRay(Point *camera, Point *viewport, Sphere *sphere,
 }
 
 // lighting functions
+void closestIntersection(Point *point_1, Point *point_2, double minRange,
+                         double maxRange, Scene *scene, Sphere **closestSphere,
+                         double *closestRange) {
+  for (int i = 0; i < scene->amountOfObjectsInScene; i++) {
+    double range_1, range_2;
+    intersectRay(point_1, point_2, &scene->objectsInScene[i], &range_1,
+                 &range_2);
+    if ((range_1 >= minRange && range_1 <= maxRange) &&
+        range_1 < *closestRange) {
+      *closestRange = range_1;
+      *closestSphere = &scene->objectsInScene[i];
+    }
+    if ((range_2 >= minRange && range_2 <= maxRange) &&
+        range_2 < *closestRange) {
+      *closestRange = range_2;
+      *closestSphere = &scene->objectsInScene[i];
+    }
+  }
+}
 
 double computeLighting(Point *point, Point *normal, Scene *scene,
                        Point *pointToCamera, double specular) {
   double intensity = 0;
   for (int i = 0; i < scene->amountOfLightsInScene; i++) {
     Point length;
+    double tMax = 0;
 
     switch (scene->lightsInScene[i].type) {
       // ambient lighting
@@ -81,11 +102,21 @@ double computeLighting(Point *point, Point *normal, Scene *scene,
       // point lighting
     case 1:
       length = minusVectors(&scene->lightsInScene[i].position, point);
+      tMax = 1;
       break;
       // directional lighting
     case 2:
       length = scene->lightsInScene[i].position;
+      tMax = INFINITY;
       break;
+    }
+    Sphere *shadowSphere = NULL;
+    double shadowT = INFINITY;
+    closestIntersection(point, &length, 0.001, tMax, scene, &shadowSphere,
+                        &shadowT);
+
+    if (shadowSphere != NULL) {
+      continue;
     }
     // diffuse
     double normalDot = dotProduct(normal, &length);
@@ -114,26 +145,11 @@ Point traceRay(Point *camera, Point *viewport, Scene *scene, double minRange,
                double maxRange) {
   double closestRange = INFINITY;
   Sphere *closestSphere = NULL;
+  closestIntersection(camera, viewport, minRange, maxRange, scene,
+                      &closestSphere, &closestRange);
 
-  for (int i = 0; i < scene->amountOfObjectsInScene; i++) {
-    double range_1, range_2;
-    intersectRay(camera, viewport, &scene->objectsInScene[i], &range_1,
-                 &range_2);
-
-    if ((range_1 >= minRange && range_1 <= maxRange) &&
-        range_1 < closestRange) {
-      closestRange = range_1;
-      closestSphere = &scene->objectsInScene[i];
-    }
-    if ((range_2 >= minRange && range_2 <= maxRange) &&
-        range_2 < closestRange) {
-      closestRange = range_2;
-      closestSphere = &scene->objectsInScene[i];
-    }
-  }
   // background color
   Point color = {.x = 255, .y = 255, .z = 255};
-
   if (closestSphere == NULL) {
     return color;
   }

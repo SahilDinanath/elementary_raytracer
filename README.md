@@ -17,3 +17,8 @@ after calculating shadows:
 
 ![image](https://github.com/SahilDinanath/elementary_raytracer/assets/46680594/64d71bcc-abd5-4779-b63a-bc509629a7c3)
 
+after calculating reflections:
+
+![image](https://github.com/SahilDinanath/elementary_raytracer/assets/46680594/90f111df-fe34-4b2c-a8f8-1cfac746831f)
+
+

@@ -16,6 +16,7 @@ typedef struct {
   double radius;
   Point color;
   double specular;
+  double reflective;
 } Sphere;
 
 typedef struct {

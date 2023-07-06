@@ -87,6 +87,13 @@ void closestIntersection(Point *point_1, Point *point_2, double minRange,
   }
 }
 
+Point reflectRay(Point *ray, Point *normal) {
+  Point reflectedPoint = multiplyVectorByConstant(normal, 2);
+  reflectedPoint =
+      multiplyVectorByConstant(&reflectedPoint, dotProduct(ray, normal));
+  reflectedPoint = minusVectors(&reflectedPoint, ray);
+  return reflectedPoint;
+}
 double computeLighting(Point *point, Point *normal, Scene *scene,
                        Point *pointToCamera, double specular) {
   double intensity = 0;
@@ -142,7 +149,7 @@ double computeLighting(Point *point, Point *normal, Scene *scene,
 }
 
 Point traceRay(Point *camera, Point *viewport, Scene *scene, double minRange,
-               double maxRange) {
+               double maxRange, int recursionDepth) {
   double closestRange = INFINITY;
   Sphere *closestSphere = NULL;
   closestIntersection(camera, viewport, minRange, maxRange, scene,
@@ -150,6 +157,7 @@ Point traceRay(Point *camera, Point *viewport, Scene *scene, double minRange,
 
   // background color
   Point color = {.x = 255, .y = 255, .z = 255};
+
   if (closestSphere == NULL) {
     return color;
   }
@@ -166,5 +174,18 @@ Point traceRay(Point *camera, Point *viewport, Scene *scene, double minRange,
                               closestSphere->specular));
 
   color = clampColor(&color);
-  return color;
+
+  double reflection = closestSphere->reflective;
+
+  if (recursionDepth <= 0 || reflection <= 0) {
+    return color;
+  }
+
+  Point reflectedRay = reflectRay(&negativeViewPort, &normal);
+  Point reflectedColor = traceRay(&point, &reflectedRay, scene, 0.001, INFINITY,
+                                  recursionDepth - 1);
+
+  reflectedRay = multiplyVectorByConstant(&reflectedColor, reflection);
+  temp = multiplyVectorByConstant(&color, (1 - reflection));
+  return addVectors(&temp, &reflectedRay);
 }

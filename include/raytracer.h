@@ -4,7 +4,7 @@
 Point convertPointFromViewportToScreenCoordSystem(Point *, double, double);
 Point convertCanvasToViewport(Point *, double, double, double, double);
 Point convertViewportToCanvas(Point *, double, double, double, double);
-Point traceRay(Point *, Point *, Scene *, double, double);
+Point traceRay(Point *, Point *, Scene *, double, double, int);
 void intersectRay(Point *, Point *, Sphere *, double *, double *);
 double computeLighting(Point *, Point *, Scene *);
 

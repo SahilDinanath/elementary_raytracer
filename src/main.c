@@ -52,20 +52,24 @@ int main(int argc, char *argv[]) { // code to render window
   Sphere sphere_1 = {.center = {.x = 0, .y = -1, .z = 3},
                      .radius = 1,
                      .color = {.x = 255, .y = 0, .z = 0},
-                     .specular = 500};
+                     .specular = 500,
+                     .reflective = 0.2};
 
   Sphere sphere_2 = {.center = {.x = 2, .y = 0, .z = 4},
                      .radius = 1,
                      .color = {.x = 0, .y = 0, .z = 255},
-                     .specular = 500};
+                     .specular = 500,
+                     .reflective = 0.3};
   Sphere sphere_3 = {.center = {.x = -2, .y = 0, .z = 4},
                      .radius = 1,
                      .color = {.x = 0, .y = 255, .z = 0},
-                     .specular = 10};
+                     .specular = 10,
+                     .reflective = 0.4};
   Sphere sphere_4 = {.center = {.x = 0, .y = -5001, .z = 0},
                      .radius = 5000,
                      .color = {.x = 255, .y = 255, .z = 0},
-                     .specular = 1000};
+                     .specular = 1000,
+                     .reflective = 0.5};
 
   Scene scene = {.amountOfObjectsInScene = 4,
                  .objectsInScene = (Sphere *)malloc(4 * sizeof(Sphere)),
@@ -95,7 +99,7 @@ int main(int argc, char *argv[]) { // code to render window
       Point point = {.x = x, .y = y};
       point = convertCanvasToViewport(&point, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
                                       CANVAS_WIDTH, CANVAS_HEIGHT);
-      Point color = traceRay(&camera, &point, &scene, 1, INFINITY);
+      Point color = traceRay(&camera, &point, &scene, 1, INFINITY, 3);
       point = convertViewportToCanvas(&point, VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
                                       CANVAS_WIDTH, CANVAS_HEIGHT);
       point = convertPointFromViewportToScreenCoordSystem(&point, CANVAS_WIDTH,
